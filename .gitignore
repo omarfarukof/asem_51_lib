@@ -1,0 +1,5 @@
+code/*.asm~
+code/*.adf
+code/*.adf~
+code/*.lst
+code/*.lst~
