@@ -162,5 +162,5 @@ M_7SEG_GET_INDEX_VALUE:
         ;NOP
 
 PROG_END:
-                END
+    END
 
