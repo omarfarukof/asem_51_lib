@@ -1,0 +1,166 @@
+    ORG 0
+    ; TIME_DELAY SETUP
+        TIME_DELAY_L0_COUNT         EQU     55H
+        TIME_DELAY_L1_COUNT         EQU     56H
+
+    ; 7 SEG DISPLAY SETUP
+        M_7SEG_DISP_OUT_PORT        EQU     P0
+        M_7SEG_DISP_INDEX_0         EQU     50H
+        ; NUMBER OF DISPLAY WILL BE USED (0 - 3)
+        M_7SEG_DISP_DIGITS_NO       EQU     3
+
+        IF M_7SEG_DISP_DIGITS_NO >= 0
+        M_7SEG_DISPLAY_0_ENABLE_PIN   EQU     P1.0
+        ENDIF
+        IF M_7SEG_DISP_DIGITS_NO >= 1
+        M_7SEG_DISPLAY_1_ENABLE_PIN   EQU     P1.1
+        ENDIF
+        IF M_7SEG_DISP_DIGITS_NO >= 2
+        M_7SEG_DISPLAY_2_ENABLE_PIN   EQU     P1.2
+        ENDIF
+        IF M_7SEG_DISP_DIGITS_NO >= 3
+        M_7SEG_DISPLAY_3_ENABLE_PIN   EQU     P1.3
+        ENDIF
+
+    MOV SP, #70H
+    MOV PSW, #00H
+
+
+
+; ============== MAIN CODE START =====================
+MAIN:           ; MAIN CODE START
+        LCALL M_7SEG_INIT
+        
+        MOV R2, #00H
+    LOOP:           
+        MOV A, R2
+        LCALL M_7SEG_DISPLAY_3
+        INC R2
+
+        MOV A, R2
+        LCALL M_7SEG_DISPLAY_2
+        INC R2
+        
+        MOV A, R2
+        LCALL M_7SEG_DISPLAY_1
+        INC R2
+
+        MOV A, R2
+        LCALL M_7SEG_DISPLAY_0
+        INC R2
+
+        ;CJNE R2, #0AH, LOOP
+        ;MOV R2, #00H
+        MOV A, R2
+        ANL A, #0FH
+        MOV R2, A
+
+        JMP LOOP
+
+    IC_HOLD:    JMP IC_HOLD
+    MAIN_END:   LJMP PROG_END;END
+; ============== MAIN CODE END ========================
+
+
+
+; ============== SUBROUTINE / FUNCTIONS ===============
+; TIME CALCULATED DELAY
+TIME_DELAY_1MS:
+        ; FOR f = 11Hz => T = 12/f = 1.09091us
+        ; ==> n = 1ms/T = 916 = 3*L0.L1 + 3*L1 + 2 
+        ; ==> L1 = (916 - 2) / ( 3*L0 + 3 )
+        ; ==> L1 = 1 & L0 = 255
+        MOV TIME_DELAY_L1_COUNT, #1
+    TIME_DELAY_1MS_L1:
+        MOV TIME_DELAY_L0_COUNT, #255
+    TIME_DELAY_1MS_L0:
+        DJNZ TIME_DELAY_L0_COUNT, TIME_DELAY_1MS_L0
+        DJNZ TIME_DELAY_L1_COUNT, TIME_DELAY_1MS_L1
+    RET
+
+; TIME_DELAY_20MS:
+;         ; FOR f = 11Hz => T = 1.09091us
+;         ; ==> n = 20ms/T = 18333 = 3*L0.L1 + 3*L1 + 2 
+;         ; ==> L1 = 23 & L0 = 255
+;         MOV TIME_DELAY_L1_COUNT, #23
+;     TIME_DELAY_20MS_L1:
+;         MOV TIME_DELAY_L0_COUNT, #255
+;     TIME_DELAY_20MS_L0:
+;         DJNZ TIME_DELAY_L0_COUNT, TIME_DELAY_20MS_L0
+;         DJNZ TIME_DELAY_L1_COUNT, TIME_DELAY_20MS_L1
+;     RET
+
+
+; MULTIPLE 7 SEGMENT DISPLAY
+M_7SEG_INIT: ; SETUP OUTPUT(0) PORTS FOR 7 SEG DISPLAY
+        MOV M_7SEG_DISP_OUT_PORT, #00H
+
+        ; CONDITIONAL DIRECTIVES FOR MULTIPLE 7 SEG DISPLAY
+        IF M_7SEG_DISP_DIGITS_NO >= 0
+            CLR M_7SEG_DISPLAY_0_ENABLE_PIN
+        ENDIF
+        IF M_7SEG_DISP_DIGITS_NO >= 1
+            CLR M_7SEG_DISPLAY_1_ENABLE_PIN
+        ENDIF
+        IF M_7SEG_DISP_DIGITS_NO >= 2
+            CLR M_7SEG_DISPLAY_2_ENABLE_PIN
+        ENDIF
+        IF M_7SEG_DISP_DIGITS_NO >= 3
+            CLR M_7SEG_DISPLAY_3_ENABLE_PIN
+        ENDIF
+        RET
+
+IF M_7SEG_DISP_DIGITS_NO >= 0
+M_7SEG_DISPLAY_0:
+        LCALL M_7SEG_GET_INDEX_VALUE
+        MOV M_7SEG_DISP_OUT_PORT, A
+        CPL M_7SEG_DISPLAY_0_ENABLE_PIN
+        LCALL TIME_DELAY_1MS
+        CPL M_7SEG_DISPLAY_0_ENABLE_PIN
+        RET
+ENDIF
+IF M_7SEG_DISP_DIGITS_NO >= 1
+M_7SEG_DISPLAY_1:
+        LCALL M_7SEG_GET_INDEX_VALUE
+        MOV M_7SEG_DISP_OUT_PORT, A
+        CPL M_7SEG_DISPLAY_1_ENABLE_PIN
+        LCALL TIME_DELAY_1MS
+        CPL M_7SEG_DISPLAY_1_ENABLE_PIN
+        RET
+ENDIF
+IF M_7SEG_DISP_DIGITS_NO >= 2
+M_7SEG_DISPLAY_2:
+        LCALL M_7SEG_GET_INDEX_VALUE
+        MOV M_7SEG_DISP_OUT_PORT, A
+        CPL M_7SEG_DISPLAY_2_ENABLE_PIN
+        LCALL TIME_DELAY_1MS
+        CPL M_7SEG_DISPLAY_2_ENABLE_PIN
+        RET
+ENDIF
+IF M_7SEG_DISP_DIGITS_NO >= 3
+M_7SEG_DISPLAY_3:
+        LCALL M_7SEG_GET_INDEX_VALUE
+        MOV M_7SEG_DISP_OUT_PORT, A
+        CPL M_7SEG_DISPLAY_3_ENABLE_PIN
+        LCALL TIME_DELAY_1MS
+        CPL M_7SEG_DISPLAY_3_ENABLE_PIN
+        RET
+ENDIF
+
+M_7SEG_GET_INDEX_VALUE:
+        MOV DPTR, #M_7SEG_ARRAY
+        MOVC A, @A+DPTR
+        CPL A   ; COMLEMENT IF NEEDED
+
+
+
+; =================== DATA LOOK UP TABLE =============================
+    ; END OF THE STRING HAS TO BE 0
+    M_7SEG_ARRAY:
+        DB 3FH, 06H, 5BH, 4FH, 66H, 6DH, 7DH, 07H, 7FH, 6FH, 77H, 7CH, 39H, 5EH, 79H, 71H, 0
+        ;   0 ,  1 ,  2 ,  3 ,  4 ,  5 ,  6 ,  7 ,  8 ,  9 ,  A ,  b ,  C ,  d ,  E ,  F ;
+        ;NOP
+
+PROG_END:
+                END
+
