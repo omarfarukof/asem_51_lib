@@ -1,13 +1,11 @@
     ORG 0
+    MOV SP, #70H
+    MOV PSW, #00H
     SJMP MAIN
 
     ; ---- ---- ----
     ; WRITE SETUP CODES HERE
     ; ---- ---- ----
-
-
-    MOV SP, #70H
-    MOV PSW, #00H
 
 
 
